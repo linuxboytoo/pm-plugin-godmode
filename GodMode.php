@@ -30,15 +30,17 @@ class GodMode implements Plugin{
 	}
 
         public function __destruct(){
-
         }
 
 	public function loadUsers()		{ return json_decode(file_get_contents($this->config['statuspath']),true); }
 	public function saveUsers($users)	{ file_put_contents($this->config['statuspath'],json_encode($users)); }
 
+
 	public function healthChange($data){
 		$users = $this->loadUsers();
-		if($users[$data['entity']->player->username]==1) { return false; }
+		$username = $data['entity']->player->username;
+ 
+		if($users[$username]==1 && $this->api->ban->isOp($username)) { return false; }
 		
 		return true; 
 	}
@@ -46,17 +48,16 @@ class GodMode implements Plugin{
 	public function godMode($cmd, $params, $issuer, $alias){
 		$username = $issuer->username;
 
-		$users = $this->loadUsers();
+		if($this->api->ban->isOp($username))
+		{
+			$users = $this->loadUsers();
 
-		if($users[$username]==1) 	{ $users[$username] = 0; 	$output = "God Mode Disabled"; 	}
-		else 				{ $users[$username] = 1; 	$output = "God Mode Enabled";	}
+			if($users[$username]==1) 	{ $users[$username] = 0; 	$output = "God Mode Disabled"; 	}
+			else 				{ $users[$username] = 1; 	$output = "God Mode Enabled";	}
 
-		$this->saveUsers($users);
-		return $output;
-	}
-
-	public function debug($data){
-		console('test');
-		console(var_dump($data,1));
+			$this->saveUsers($users);
+			return $output;
+		}
+		else { return false; }
 	}
 }
